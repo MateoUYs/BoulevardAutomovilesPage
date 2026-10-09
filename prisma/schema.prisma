@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Car {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+
+  brand           String
+  model           String
+  version         String?
+  year            Int
+  mileageKm       Int
+  priceUsd        Int
+  condition       CarCondition
+  status          PublishStatus    @default(BORRADOR)
+  category        VehicleCategory?
+  showWhenSold    Boolean          @default(false)
+
+  fuelType        FuelType?
+  transmission    Transmission?
+  engine          String?
+  engineCapacity  String?
+  powerHp         Int?
+  tankCapacityL   Int?
+  doors           Int?
+  seats           Int?
+  cityKmPerLiter  Float?
+  roadKmPerLiter  Float?
+  safetyNotes     String?
+
+  specsSource     SpecsSource?
+  specsReviewed   Boolean          @default(false)
+  specsReviewNote String?
+
+  tag             CarTag?
+  description     String?
+
+  images          CarImage[]
+  inquiries       Inquiry[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  publishedAt     DateTime?
+
+  @@index([status, publishedAt])
+  @@index([brand, model, year])
+  @@index([priceUsd])
+  @@index([category])
+}
+
+model CarImage {
+  id        String   @id @default(cuid())
+  carId     String
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  url       String
+  alt       String
+  order     Int
+  isCover   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([carId, order])
+  @@index([carId, isCover])
+}
+
+model Inquiry {
+  id          String      @id @default(cuid())
+  type        InquiryType
+  name        String
+  phone       String
+  email       String?
+  message     String
+  honeypot    String?
+  ipHash      String?
+  userAgent   String?
+  carId       String?
+  car         Car?        @relation(fields: [carId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime    @default(now())
+
+  @@index([type, createdAt])
+  @@index([carId])
+}
+
+model ConsumptionReference {
+  id                 String          @id @default(cuid())
+  category           VehicleCategory @unique
+  cityKmPerLiterAvg  Float
+  roadKmPerLiterAvg  Float
+  notes              String?
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model FuelPriceSetting {
+  id               String   @id @default(cuid())
+  gasolinePriceUyu Float
+  dieselPriceUyu   Float
+  electricKwhUyu   Float?
+  notes            String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model SiteSetting {
+  id                 String   @id @default(cuid())
+  showSoldVehicles   Boolean  @default(false)
+  whatsappPhoneIntl  String   @default("59800000000")
+  primaryPhone       String   @default("000 000 000")
+  secondaryPhone     String   @default("")
+  instagramUrl       String   @default("")
+  businessHours      String?
+  address            String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+}
+
+enum CarCondition {
+  NUEVO
+  USADO
+}
+
+enum PublishStatus {
+  BORRADOR
+  PUBLICADO
+  RESERVADO
+  VENDIDO
+}
+
+enum FuelType {
+  NAFTA
+  DIESEL
+  HIBRIDO
+  ELECTRICO
+  FLEX
+  OTRO
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATICA
+  CVT
+  OTRA
+}
+
+enum CarTag {
+  CERO_KM
+  RECIEN_INGRESADO
+  OPORTUNIDAD
+  FINANCIABLE
+}
+
+enum VehicleCategory {
+  SEDAN
+  HATCHBACK
+  SUV
+  PICKUP
+  UTILITARIO
+  OTRO
+}
+
+enum SpecsSource {
+  NHTSA
+  FUELECONOMY
+  CARQUERY
+  AI_ESTIMADO
+  MANUAL
+}
+
+enum InquiryType {
+  GENERAL
+  FINANCIACION
+  PERMUTA
+  TEST_DRIVE
+  WHATSAPP
+}
